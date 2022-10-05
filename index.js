@@ -1,7 +1,19 @@
 const express = require('express')
 const app = express()
+const cors = require('cors')
+const morgan = require('morgan')
+
+morgan.token('body', function (req, res) {
+  return JSON.stringify(req.body)
+})
 
 app.use(express.json())
+app.use(
+  morgan(
+    ':method :url :status :res[content-length] - :response-time ms - :body'
+  )
+)
+app.use(cors())
 
 let phones = [
   {
@@ -74,10 +86,19 @@ app.post('/api/persons', (req, res) => {
     return res.status(400).json({ error: 'Name already exists' })
   }
   phones = [...phones, personToAdd]
-  return res.status(201).json(phones)
+  return res.status(202).json(phones)
 })
 
-const PORT = process.env.PORT || 8081
+app.put('/api/persons/:id', (req, res) => {
+  const body = req.body
+  const id = Number(req.params.id)
+  const personToAdd = { ...body, id }
+  phones = phones.filter((person) => person.id !== id)
+  phones = [...phones, personToAdd]
+  return res.status(200)
+})
+
+const PORT = process.env.PORT || 3002
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`)
 })
