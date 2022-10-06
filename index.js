@@ -2,6 +2,7 @@ const express = require('express')
 const app = express()
 const cors = require('cors')
 const morgan = require('morgan')
+const errorHandler = require('./errorHandler')
 
 const Person = require('./modules/person')
 const { response } = require('express')
@@ -39,25 +40,27 @@ app.get('/api/persons', (req, res) => {
   })
 })
 
-app.get('/api/persons/:id', (req, res) => {
+app.get('/api/persons/:id', (req, res, next) => {
   const id = req.params.id
   Person.findById(id)
     .then((person) => {
       person ? res.json(person) : res.status(404).end()
     })
     .catch((err) => {
-      console.error(err)
-      res.status(500).end()
+      next(err)
     })
 })
 
-// app.delete('/api/persons/:id', (req, res) => {
-//   const id = Number(req.params.id)
-//   phones = phones.filter((person) => person.id !== id)
-//   res.json(phones)
-// })
+app.delete('/api/persons/:id', (req, res, next) => {
+  const id = Number(req.params.id)
+  Person.findByIdAndDelete(id)
+    .then((result) => {
+      res.status(204).end()
+    })
+    .catch((error) => next(error))
+})
 
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', (req, res, next) => {
   const body = req.body
   console.log(body)
 
@@ -76,14 +79,18 @@ app.post('/api/persons', (req, res) => {
   })
 })
 
-app.put('/api/persons/:id', (req, res) => {
+app.put('/api/persons/:id', (req, res, next) => {
   const body = req.body
-  const id = Number(req.params.id)
+  const id = req.params.id
   const personToAdd = { ...body, id }
-  phones = phones.filter((person) => person.id !== id)
-  phones = [...phones, personToAdd]
-  return res.status(200)
+  Person.findByIdAndUpdate(id, personToAdd, { new: true })
+    .then((result) => {
+      res.json(result)
+    })
+    .catch((error) => next(error))
 })
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3002
 app.listen(PORT, () => {
