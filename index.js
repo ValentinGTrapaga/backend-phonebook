@@ -1,11 +1,16 @@
+require('dotenv').config()
 const express = require('express')
-const app = express()
 const cors = require('cors')
 const morgan = require('morgan')
-const errorHandler = require('./errorHandler')
 
-const Person = require('./modules/person')
-const { response } = require('express')
+const errorHandler = require('./utils/errorHandler')
+const unknownEndpoint = require('./utils/unknownEndpoint')
+
+const Person = require('./models/person.js')
+
+const phoneRouter = require('./controllers/phones')
+
+const app = express()
 
 morgan.token('body', function (req, res) {
   return JSON.stringify(req.body)
@@ -34,82 +39,9 @@ app.get('/info', async (req, res) => {
   )
 })
 
-app.get('/api/persons', (req, res) => {
-  Person.find({}).then((result) => {
-    res.json(result)
-  })
-})
+app.use('/api/persons', phoneRouter)
 
-app.get('/api/persons/:id', (req, res, next) => {
-  const id = req.params.id
-  Person.findById(id)
-    .then((person) => {
-      person ? res.json(person) : res.status(404).end()
-    })
-    .catch((err) => {
-      next(err)
-    })
-})
-
-app.delete('/api/persons/:id', (req, res, next) => {
-  const id = req.params.id
-  Person.findByIdAndDelete(id)
-    .then((result) => {
-      res.status(204).end()
-    })
-    .catch((error) => next(error))
-})
-
-app.post('/api/persons', (req, res, next) => {
-  const body = req.body
-  console.log(body)
-
-  if (!body) {
-    res.status(400).json({ error: 'Content missing' })
-  }
-
-  const newPerson = new Person({
-    name: body.name,
-    number: body.number,
-    date: new Date()
-  })
-
-  Person.findOne({ name: body.name })
-    .then((result) => {
-      const { _id } = result
-      newPerson._id = _id
-      if (result) {
-        Person.findByIdAndUpdate(_id, newPerson, {
-          new: true,
-          runValidators: true,
-          context: 'query'
-        }).then((updatedPerson) => {
-          res.json(updatedPerson)
-        })
-      } else {
-        newPerson.save().then((savedPerson) => {
-          res.json(savedPerson)
-        })
-      }
-    })
-    .catch((err) => next(err))
-})
-
-app.put('/api/persons/:id', (req, res, next) => {
-  const body = req.body
-  const id = req.params.id
-  const personToAdd = { ...body, id }
-  Person.findByIdAndUpdate(id, personToAdd, {
-    new: true,
-    runValidators: true,
-    context: 'query'
-  })
-    .then((result) => {
-      res.json(result)
-    })
-    .catch((error) => next(error))
-})
-
+app.use(unknownEndpoint)
 app.use(errorHandler)
 
 const PORT = process.env.PORT || 3002
