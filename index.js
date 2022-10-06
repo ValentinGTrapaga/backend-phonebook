@@ -79,11 +79,13 @@ app.post('/api/persons', (req, res, next) => {
       const { _id } = result
       newPerson._id = _id
       if (result) {
-        Person.findOneAndUpdate(_id, newPerson, { new: true }).then(
-          (updatedPerson) => {
-            res.json(updatedPerson)
-          }
-        )
+        Person.findByIdAndUpdate(_id, newPerson, {
+          new: true,
+          runValidators: true,
+          context: 'query'
+        }).then((updatedPerson) => {
+          res.json(updatedPerson)
+        })
       } else {
         newPerson.save().then((savedPerson) => {
           res.json(savedPerson)
@@ -97,7 +99,11 @@ app.put('/api/persons/:id', (req, res, next) => {
   const body = req.body
   const id = req.params.id
   const personToAdd = { ...body, id }
-  Person.findByIdAndUpdate(id, personToAdd, { new: true })
+  Person.findByIdAndUpdate(id, personToAdd, {
+    new: true,
+    runValidators: true,
+    context: 'query'
+  })
     .then((result) => {
       res.json(result)
     })
