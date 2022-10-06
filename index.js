@@ -52,7 +52,7 @@ app.get('/api/persons/:id', (req, res, next) => {
 })
 
 app.delete('/api/persons/:id', (req, res, next) => {
-  const id = Number(req.params.id)
+  const id = req.params.id
   Person.findByIdAndDelete(id)
     .then((result) => {
       res.status(204).end()
@@ -74,9 +74,23 @@ app.post('/api/persons', (req, res, next) => {
     date: new Date()
   })
 
-  newPerson.save().then((savedPerson) => {
-    res.json(savedPerson)
-  })
+  Person.findOne({ name: body.name })
+    .then((result) => {
+      const { _id } = result
+      newPerson._id = _id
+      if (result) {
+        Person.findOneAndUpdate(_id, newPerson, { new: true }).then(
+          (updatedPerson) => {
+            res.json(updatedPerson)
+          }
+        )
+      } else {
+        newPerson.save().then((savedPerson) => {
+          res.json(savedPerson)
+        })
+      }
+    })
+    .catch((err) => next(err))
 })
 
 app.put('/api/persons/:id', (req, res, next) => {
