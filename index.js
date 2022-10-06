@@ -6,9 +6,7 @@ const morgan = require('morgan')
 const errorHandler = require('./utils/errorHandler')
 const unknownEndpoint = require('./utils/unknownEndpoint')
 
-const Person = require('./models/person.js')
-
-const phoneRouter = require('./controllers/phones')
+const blogRouter = require('./controllers/blogs')
 
 const app = express()
 
@@ -25,21 +23,10 @@ app.use(
 app.use(cors())
 
 app.get('/', (req, res) => {
-  res.send('<h1>Hello from the phonebook server</h1>')
+  res.send('<h1>Hello from the blog server</h1>')
 })
 
-app.get('/info', async (req, res) => {
-  const data = await Person.find({})
-  const length = data.length
-  const reqDate = new Date()
-  res.send(
-    `<h3>Phonebook has ${length} entries</h3>
-    <p>${reqDate}</p>
-    `
-  )
-})
-
-app.use('/api/persons', phoneRouter)
+app.use('/api/blogs', blogRouter)
 
 app.use(unknownEndpoint)
 app.use(errorHandler)
