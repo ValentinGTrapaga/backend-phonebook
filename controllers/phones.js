@@ -21,7 +21,7 @@ phoneRouter.get('/:id', (req, res, next) => {
 phoneRouter.delete('/:id', (req, res, next) => {
   const id = req.params.id
   Person.findByIdAndDelete(id)
-    .then((result) => {
+    .then(() => {
       res.status(204).end()
     })
     .catch((error) => next(error))
@@ -43,9 +43,9 @@ phoneRouter.post('/', (req, res, next) => {
 
   Person.findOne({ name: body.name })
     .then((result) => {
-      const { _id } = result
-      newPerson._id = _id
       if (result) {
+        const { _id } = result
+        newPerson._id = _id
         Person.findByIdAndUpdate(_id, newPerson, {
           new: true,
           runValidators: true,
